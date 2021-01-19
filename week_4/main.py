@@ -35,6 +35,10 @@ df.dropna()
 df['lyrics'] = df['lyrics'].str.replace('[^\w\s]','')
 df['lyrics'] = df['lyrics'].str.replace('\\n',' ')
 df['lyrics'] = df['lyrics'].str.lower()
+
+#%%
+df.dropna(inplace=True)
+
 #%%
 df = df[df['lyrics'].notna()]
 df['lyrics'] = df['lyrics'].astype(str)
@@ -51,18 +55,24 @@ w_tokenizer = nltk.tokenize.WhitespaceTokenizer()
 def lemmatize_text(text):
     return [lemmatizer.lemmatize(w) for w in w_tokenizer.tokenize(text)]
 
-df["lyrics_lema"] = df['lyrics'].apply(lemmatize_text) # Doesn't work for now
+df["lyrics_lema"] = df['lyrics'].apply(lemmatize_text)
 
 #%%
 # Identifying Stop Words
 from sklearn.feature_extraction.text import ENGLISH_STOP_WORDS
 
 def stop_word(text):
-    return " ".join([word for word in text.replace(" ") if word not in ENGLISH_STOP_WORDS])
+    return [x for x in text if x not in ENGLISH_STOP_WORDS]
 
 #%%
 #Delete stop words
 df["lyrics_stop_lema"] = df["lyrics_lema"].apply(lambda a: [word for word in a if word not in ENGLISH_STOP_WORDS])
+df
+#%%
+
+df["lyrics_stop_lema_function"] = df["lyrics_lema"].apply(stop_word)
+
+#%%
 df
 
 #%%
@@ -96,14 +106,14 @@ df[['artist','word_count']].groupby('artist').sum() #But the about of words isn'
 from imblearn.over_sampling import RandomOverSampler, SMOTE
 from train_model import rebalance_dataset
 
-#rebalance_dataset(X,y) #doesn't work because df
+rebalance_dataset(X,y) #doesn't work because df
 #%%
 print(f"test_score: {m.score(X_test, y_test):6.3f}")
 
 #%%
 # fit model on entire data before saving
 m.fit(X, y)
-prediction = m.predict_proba(['Yellow submarine'])
+prediction = m.predict_proba(['sympathie for the devil'])
 
 print('\n This looks like a song from:')
 artists = m.steps[-1][1].classes_   
