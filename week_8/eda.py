@@ -1,79 +1,123 @@
 #%%
+""" EDA """
 
-from typing import DefaultDict
-from numpy.core.fromnumeric import sort
 import pandas as pd
 import numpy as np
-from pandas.core.tools.datetimes import to_datetime
-from pandas_profiling import ProfileReport
-import matplotlib.pyplot as plt
-import seaborn as sns
-sns.set(rc={'figure.figsize':(11.7,8.27)})
+import re
+
+# Import data
+
+DATA_FOLDER = "./data/"
+TIMESTEP = "1T"
+
+def import_data(file, data_folder):
+    df = pd.read_csv(data_folder + file, sep = ";", parse_dates = True, index_col = 0)
+    df["customer_no"] = re.findall(r"^\w+", file)[0] + df["customer_no"].astype("string")
+    return(df)
+
+def unique_customers(df):
+    mask = df["customer_no"].duplicated() == False
+    return(df[mask][["customer_no"]])
+    
+monday = import_data("monday.csv", DATA_FOLDER)
+tuesday = import_data("tuesday.csv", DATA_FOLDER)
+wednesday = import_data("wednesday.csv", DATA_FOLDER)
+thursday = import_data("thursday.csv", DATA_FOLDER)
+friday = import_data("friday.csv", DATA_FOLDER)
+
+data = monday.append(tuesday).append(wednesday).append(thursday).append(friday)
+
+#%%
+mask = monday["customer_no"].duplicated() == False
+mask
+#%%
+# Make pivot data frame
+
+data_customer_centric = data.pivot(columns = "customer_no")
+data_customer_centric
+#%%
+
+data_customer_centric = data_customer_centric.fillna(method = 'ffill', axis = 0) + (data_customer_centric.fillna(method = 'bfill', axis = 0) * 0) # from https://stackoverflow.com/questions/28136663/using-pandas-to-fill-gaps-only-and-not-nans-on-the-ends
+#%%
+data_customer_centric
+#%%
+# Some basic data understanding
+data.shape
+data.info()
+data.head()
+data.index.weekday.value_counts()
+
+#%%
+# Calculate the total number of customers in each section
+
+monday.groupby(["location"]).size() # not unique customers
+#%%
+monday[monday.duplicated() == False].groupby("location").size() # unique customers
+
+#%%
+# Calculate the total number of customers in each section over time
+
+data.groupby([data.index, "location"]).size()
+# Do it over hour and remove duplicates
+
+#%%
+# Display the number of customers at checkout over time
+
+monday[monday["location"] == "checkout"]["customer_no"].resample("1H").count().plot()
+#%%
+
+# Calculate the time each customer spent in the market
+
+data_customer_centric.notna().sum()
+#%%
+
+data.index.max()
+def minmax(df):
+    return df.index.max() - df.index.min()
+
+data.groupby("customer_no").agg(minmax)
+
+#%%
+# Calculate the total number of customers in the supermarket over time
+
+data_customer_centric.notna().sum(axis = 1)
+
+unique_customers(monday).resample(TIMESTEP).size()
+
+#%%
+# Our business managers think that the first section customers visit follows a different pattern than the following ones. Plot the distribution of customers of their first visited section versus following sections (treat all sections visited after the first as “following”).
+
+# ! missing
+
+
+# Estimate the total revenue for a customer using the following table:
+    # fruit: 4€
+    # spices: 3€
+    # dairy: 5€
+    # drinks: 6€
+    
+table_locations = pd.crosstab(data["customer_no"], data["location"])
+
+table_locations
+#%%
+
+table_locations["dairy"] = table_locations["dairy"].apply(lambda x: x * 5)
+#%%
+table_locations["spices"] = table_locations["spices"].apply(lambda x: x * 3)
+table_locations["fruit"] = table_locations["fruit"].apply(lambda x: x * 4)
+table_locations["drinks"] = table_locations["drinks"].apply(lambda x: x * 6)
+#%%
+table_locations
 
 #%%
 
-monday = pd.read_csv('data/monday.csv', sep=';', date_parser=True)
-tuesday = pd.read_csv('data/tuesday.csv', sep=';')
-wednesday = pd.read_csv('data/wednesday.csv', sep=';')
-thursday = pd.read_csv('data/thursday.csv', sep=';')
-friday = pd.read_csv('data/friday.csv', sep=';')
+def count_up(x):
+    return list(range(len(x))) 
+
+monday['step'] = monday.groupby('customer_no').transform(count_up)
 
 #%%
-monday['timestamp'] = to_datetime(monday['timestamp'],format='%Y-%m-%d %H:%M:%S')
+monday = monday.reset_index()
 #%%
-monday[monday['customer_no']==1]
-
-#%%
-df = monday.groupby('customer_no')[['location']].count()
-
-df.hist()
-
-#monday['duplicate'] = monday.duplicated()
-
-#%%
-profile = ProfileReport(monday)
-profile
-
-#%%%
-# 
-#? Q1. Calculate the total number of customers in each section
-q1 = monday.groupby('location')[['location']].count()
-
-q1.plot(kind='bar')
-
-
-#%%
-#? Q2 : Calculate the total number of customers in each section over time
-
-monday['hour'] = monday['timestamp'].dt.hour
-q2 = monday.groupby(['hour','location'])[['timestamp']].count()
-
-
-sns.lineplot(x='hour',y='timestamp', data=q2, hue='location')
-
-#%%
-
-#? Q3: Display the number of customers at checkout over time
-#! Creating checkout for last consumers 
-
-#Show last entry per consumer
-# How can I get the location in here ?! 
-
-df3 = monday.groupby(['customer_no'])[['timestamp','location']].max()
-df4 = monday.groupby(['customer_no'],sort='timestamp').max('timestamp')
-df5 = monday.groupby(['customer_no'])[['timestamp']].max()
-monday['last_entry'] = If monday['timestamp'].max()
-#monday[monday['timestamp']==df5['timestamp']]
-
-#%%
+monday['step'].hist()
 monday
-
-#Testing Testing Yes I saw! Try to run something
-#%%
-#? Q4. Calculate the time each customer spent in the market
-time_spent = monday.groupby('customer_no')[['timestamp']].agg(np.ptp)
-
-time = pd.to_timedelta(time_spent.timestamp).dt.total_seconds() / 60
-#(time_spent.timestamp - pd.to_datetime('1970-01-01')).dt.total_seconds()
-
-time.hist()
