@@ -1,0 +1,131 @@
+<!DOCTYPE html>
+<html>
+<title>Florian's MOVIE RECOMMENDER</title>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<link rel="stylesheet" href="https://www.w3schools.com/w3css/4/w3.css">
+<link href="https://fonts.googleapis.com/css?family=Raleway" rel="stylesheet" type="text/css">
+<style>
+body {font-family: "Raleway", Arial, sans-serif}
+.w3-row img {margin-bottom: -8px}
+</style>
+<body>
+
+<link rel="stylesheet" href="//code.jquery.com/ui/1.12.1/themes/base/jquery-ui.css">
+<script src="https://code.jquery.com/jquery-3.5.1.min.js" crossorigin="anonymous"></script>
+<script src="https://code.jquery.com/ui/1.12.1/jquery-ui.min.js" crossorigin="anonymous"></script>
+
+
+<!-- !PAGE CONTENT! -->
+<div class="w3-content" style="max-width:1500px">
+
+  <!-- Header -->
+  <header class="w3-container w3-xlarge w3-padding-24">
+    <a href="#" class="w3-left w3-button w3-white">MOVIE RECOMMENDER</a>
+  </header>
+
+  <!-- Photo Grid -->
+  <div class="w3-row">
+    <div class="w3-half">
+      <img src="/static/ex_machina.jpg" style="width:30%">
+      <img src="/static/inception.jpg" style="width:30%">
+      <img src="/static/mad_max.jpg" style="width:30%">
+    </div>
+
+    <div class="w3-half">
+      <img src="/static/coco.png" style="width:30%">
+      <img src="/static/pulp_fiction.jpg" style="width:30%">
+      <img src="/static/star_wars.jpg" style="width:30%">
+    </div>
+  </div>
+
+
+
+  <!-- Menu Modal -->
+<div id="menu" class="w3-modal">
+  <div class="w3-modal-content w3-animate-zoom">
+    <div class="w3-container w3-black w3-display-container">
+      <span onclick="document.getElementById('menu').style.display='none'" class="w3-button w3-display-topright w3-large">x</span>
+      <h1>Starters</h1>
+    </div>
+<!-- End Page Content -->
+</div>
+
+<!-- Footer / About Section -->
+<footer class="w3-light-grey w3-padding-64 w3-center" id="about">
+  <h2>How it works</h2>
+    <p>Simply type in what you saw, and I will tell you what you will see</p>
+    <br>
+    <br>
+
+    <script>
+        $(function() {
+            $(".searchBox").autocomplete({
+                source : function(request, response) {
+                    $.ajax({
+                        type: "POST",
+                        url : "http://localhost:5000/search",
+                        dataType : "json",
+                        cache: false,
+                        data : {
+                            q : request.term
+                        },
+                        success : function(data) {
+                            //alert(data);
+                            //console.log(data);
+                            response(data);
+                        },
+                        error: function(jqXHR, textStatus, errorThrown) {
+                            console.log(textStatus + " " + errorThrown);
+                        }
+                    });
+                },
+                minLength : 2
+            });
+        });
+    </script>
+    <body>
+      <form action="/movie" method="GET">
+            <p style="width: 560px; margin: auto;">
+              
+                <label>Movie 1 </label>&nbsp;&nbsp;<input type="text" name="movie1" class="searchBox"/>
+                <label>Movie 2 </label>&nbsp;&nbsp;<input type="text" name="movie2" class="searchBox"/>
+            </p>
+        </div>
+    </body>   
+
+    <div class="w3-section"> 
+      <label><b>Score</b></label>
+        <input type="radio" id="1" name="rating1" value="1">
+        <label for="male">1</label>
+        <input type="radio" id="2" name="rating1" value="2">
+        <label for="female">2</label>
+        <input type="radio" id="3" name="rating1" value="3">
+        <label for="other">3</label>
+        <input type="radio" id="4" name="rating1" value="4">
+        <label for="other">4</label>
+        <input type="radio" id="5" name="rating1" value="5">
+        <label for="other">5</label>
+&#160 &#160 &#160 &#160
+      <label><b>Score</b></label>
+        <input type="radio" id="1" name="rating2" value="1">
+        <label for="male">1</label>
+        <input type="radio" id="2" name="rating2" value="2">
+        <label for="female">2</label>
+        <input type="radio" id="3" name="rating2" value="3">
+        <label for="other">3</label>
+        <input type="radio" id="4" name="rating2" value="4">
+        <label for="other">4</label>
+        <input type="radio" id="5" name="rating2" value="5">
+        <label for="other">5</label>
+    </div>
+    
+    <button type="submit" class="w3-button w3-block w3-dark-grey">Get a movie recommendation</button>
+  </form>
+  <br>
+  <button onclick="document.getElementById('menu').style.display='block'" class="w3-button w3-black">Show recommendation</button> 
+
+</footer>
+</body>
+</html>
+
