@@ -5,6 +5,8 @@ from os import sep
 
 with open("data/data_4.txt") as file:
     data = [line for line in file]
+    
+data[:5]
 #%%
 
 #Part 1 
