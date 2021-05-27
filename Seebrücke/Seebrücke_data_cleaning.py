@@ -11,10 +11,12 @@ twingle3 = pd.read_csv('data/01_c_twingle_Seebücke_2020_2.csv',sep=';')
 twingle_dauer = pd.read_csv('data/02_twingle_Dauerspende.csv',sep=';')
 twingle_Winter = pd.read_csv('data/03_twingle_Winterkampagne.csv',sep=';')
 twingle_united = pd.read_csv('data/04_twingle_UnitedWeShare.csv',sep=';')
+#TODO Add older Fundbox to data
 Fundbox_2020 = pd.read_csv('data/FundraisingBox_Donations_2020_non_anonymized.csv',sep=';',encoding='latin1')
 
 #TODO Sort out going out payments from the bank transfert
 #TODO Sort donation from grants (in bank transfert)
+#TODO Add Transfert to all data
 Transfert_1 = pd.read_excel('data/Kontoauszüge Seebrücke 2020.xlsx')
 Transfert_2 = pd.read_excel('data/Kontoauszüge 2018-2019.xlsx',header=1)
 
@@ -26,16 +28,17 @@ twingle_df.columns = ['donated_at','amount','by_recurring','interval','city','co
 
 #%%
 #Modify donation_rhythm to monthy interval
-twingle_df['donation_rhythm'].value_counts()
+twingle_df['interval'].value_counts()
 
-twingle_df['donation_rhythm'] = twingle_df['donation_rhythm'].str.replace('yearly','12').copy()
-twingle_df['donation_rhythm'] = twingle_df['donation_rhythm'].str.replace('quarterly','3').copy()
-twingle_df['donation_rhythm'] = twingle_df['donation_rhythm'].str.replace('monthly','1').copy()
-twingle_df['donation_rhythm'] = twingle_df['donation_rhythm'].str.replace('one_time','').copy()
-twingle_df['donation_rhythm'] = to_numeric(twingle_df['donation_rhythm'],downcast='integer').copy()
+#%%
+twingle_df['interval'] = twingle_df['interval'].str.replace('yearly','12').copy()
+twingle_df['interval'] = twingle_df['interval'].str.replace('quarterly','3').copy()
+twingle_df['interval'] = twingle_df['interval'].str.replace('monthly','1').copy()
+twingle_df['interval'] = twingle_df['interval'].str.replace('one_time','').copy()
+twingle_df['interval'] = to_numeric(twingle_df['interval'],downcast='integer').copy()
 
 #modify to timestamp
-twingle_df['timestamp'] = to_datetime(twingle_df['timestamp'])
+twingle_df['donated_at'] = to_datetime(twingle_df['donated_at'])
 
 #%%
 # Select usefull Fundbox data
@@ -46,10 +49,11 @@ Fundbox_df['donated_at'] = to_datetime(Fundbox_df['donated_at']).copy()
 #TODO Add Transfert data
 df = pd.concat([twingle_df,Fundbox_df],ignore_index=True)
 #%%
-#Factorise email to annonymize the dataset 
+#Factorise email to annonymize the dataset and delete email col 
 cat = df['email_address'] 
 codes, uniques = pd.factorize(cat)  
 df['person_id'] = codes
+df.drop('email_address',axis=1,inplace=True)
 
 #%%
 #Clean the amount col 
@@ -62,6 +66,9 @@ Transfert_1['Betrag'] = to_numeric(Transfert_1['Betrag'])
 #%%
 #Considering that only 15 person transferred money more than once, for simplicity, I will count every transfert as a one time donation
 Transfert_1['Kontoinhaber*in'].value_counts()
+
+#%%
+df.to_csv('data_seebrücke_anno.csv')
 
 
 
